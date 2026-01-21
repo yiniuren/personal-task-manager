@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tasks</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #18181b;
+      --bg-tertiary: #27272a;
+      --bg-elevated: #3f3f46;
+      --text-primary: #fafafa;
+      --text-secondary: #d4d4d8;
+      --text-muted: #a1a1aa;
+      --accent-warm: #d97706;
+      --accent-warm-muted: #92400e;
+      --accent-warm-subtle: rgba(217, 119, 6, 0.15);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-medium: rgba(255, 255, 255, 0.15);
+      --success: #65a30d;
+      --success-muted: rgba(101, 163, 13, 0.2);
+    }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 60px 40px;
+    }
+
+    header {
+      margin-bottom: 50px;
+    }
+
+    .greeting {
+      font-size: 36px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .greeting-subtitle {
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text-muted);
+      font-style: italic;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .edit-name-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      opacity: 0.6;
+    }
+
+    .edit-name-btn:hover {
+      opacity: 1;
+      color: var(--accent-warm);
+      background: var(--accent-warm-subtle);
+    }
+
+    .greeting-name-edit {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .greeting-name-edit input {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-medium);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text-primary);
+      width: 200px;
+    }
+
+    .greeting-name-edit input:focus {
+      outline: none;
+      border-color: var(--accent-warm-muted);
+    }
+
+    .greeting-name-edit button {
+      background: var(--accent-warm);
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0a0a0a;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .greeting-name-edit button:hover {
+      background: #f59e0b;
+    }
+
+    /* Heat Map Section */
+    .heatmap-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 40px;
+    }
+
+    .heatmap-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .heatmap-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .heatmap-stats {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .heatmap-stats span {
+      color: var(--accent-warm);
+      font-weight: 600;
+    }
+
+    .heatmap-container {
+      display: flex;
+      gap: 3px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .heatmap-week {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .heatmap-day {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      background: var(--bg-tertiary);
+      transition: all 0.2s ease;
+    }
+
+    .heatmap-day:hover {
+      transform: scale(1.3);
+      box-shadow: 0 0 12px rgba(217, 119, 6, 0.3);
+    }
+
+    .heatmap-day[data-level="1"] { background: rgba(217, 119, 6, 0.25); }
+    .heatmap-day[data-level="2"] { background: rgba(217, 119, 6, 0.45); }
+    .heatmap-day[data-level="3"] { background: rgba(217, 119, 6, 0.65); }
+    .heatmap-day[data-level="4"] { background: var(--accent-warm); }
+
+    .heatmap-legend {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 16px;
+      justify-content: flex-end;
+    }
+
+    .heatmap-legend-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-right: 4px;
+    }
+
+    .heatmap-legend-box {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 800px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Section Cards */
+    .section-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .section-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: 0.5px;
+    }
+
+    .section-badge {
+      background: var(--accent-warm-subtle);
+      color: var(--accent-warm);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Progress Ring */
+    .progress-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .progress-ring {
+      position: relative;
+      width: 44px;
+      height: 44px;
+    }
+
+    .progress-ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .progress-ring-bg {
+      fill: none;
+      stroke: var(--bg-tertiary);
+      stroke-width: 4;
+    }
+
+    .progress-ring-fill {
+      fill: none;
+      stroke: var(--accent-warm);
+      stroke-width: 4;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+
+    .progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Add Task Form */
+    .add-task-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .add-task-form input {
+      flex: 1;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-medium);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+
+    .add-task-form input:focus {
+      outline: none;
+      border-color: var(--accent-warm-muted);
+      box-shadow: 0 0 0 3px var(--accent-warm-subtle);
+    }
+
+    .add-task-form input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .add-task-form input[type="date"] {
+      width: 140px;
+      flex: none;
+    }
+
+    .add-task-form input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.7);
+      cursor: pointer;
+    }
+
+    .add-task-btn {
+      background: var(--accent-warm);
+      border: none;
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0a0a0a;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .add-task-btn:hover {
+      background: #f59e0b;
+      transform: translateY(-1px);
+    }
+
+    .add-task-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Task List */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      overflow-y: auto;
+      max-height: 400px;
+    }
+
+    .task-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .task-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .task-list::-webkit-scrollbar-thumb {
+      background: var(--bg-elevated);
+      border-radius: 3px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 14px 16px;
+      transition: all 0.3s ease;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .task-item:hover {
+      border-color: var(--border-medium);
+    }
+
+    .task-item.completing {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+
+    .task-checkbox {
+      position: relative;
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .task-checkbox input {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      z-index: 1;
+    }
+
+    .task-checkbox-custom {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 22px;
+      height: 22px;
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-medium);
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .task-checkbox input:hover + .task-checkbox-custom {
+      border-color: var(--accent-warm-muted);
+    }
+
+    .task-checkbox input:checked + .task-checkbox-custom {
+      background: var(--success);
+      border-color: var(--success);
+    }
+
+    .task-checkbox input:checked + .task-checkbox-custom::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 7px;
+      width: 5px;
+      height: 9px;
+      border: solid #0a0a0a;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    .task-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .task-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-deadline {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .task-deadline.overdue {
+      color: #ef4444;
+    }
+
+    .task-deadline.today {
+      color: var(--accent-warm);
+    }
+
+    .task-parent {
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--bg-secondary);
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-top: 4px;
+      display: inline-block;
+    }
+
+    .task-delete {
+      opacity: 0;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .task-item:hover .task-delete {
+      opacity: 1;
+    }
+
+    .task-delete:hover {
+      color: #ef4444;
+    }
+
+    /* Parking Lot Specific */
+    .parking-task {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .parking-task:hover {
+      background: var(--bg-elevated);
+    }
+
+    .parking-task-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+    }
+
+    .parking-task-progress {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-left: 36px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .parking-task-progress span {
+      color: var(--accent-warm);
+      font-weight: 600;
+    }
+
+    .parking-task-edit-hint {
+      font-size: 10px;
+      color: var(--text-muted);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .parking-task:hover .parking-task-edit-hint {
+      opacity: 1;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 32px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: scale(0.95);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1);
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .modal-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .modal-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .modal-input-group label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .modal-input-group input {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-medium);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+
+    .modal-input-group input:focus {
+      outline: none;
+      border-color: var(--accent-warm-muted);
+      box-shadow: 0 0 0 3px var(--accent-warm-subtle);
+    }
+
+    .modal-input-group input:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .subtask-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .subtask-item {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .subtask-item input {
+      flex: 1;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-medium);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    .subtask-item input:focus {
+      outline: none;
+      border-color: var(--accent-warm-muted);
+    }
+
+    .subtask-item input[type="date"] {
+      width: 130px;
+      flex: none;
+    }
+
+    .subtask-item input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.7);
+      cursor: pointer;
+    }
+
+    .subtask-item.existing {
+      opacity: 0.7;
+    }
+
+    .subtask-item.existing input {
+      background: var(--bg-secondary);
+    }
+
+    .remove-subtask-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0 8px;
+      font-size: 18px;
+      transition: color 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .remove-subtask-btn:hover {
+      color: #ef4444;
+    }
+
+    .add-subtask-btn {
+      background: var(--bg-tertiary);
+      border: 1px dashed var(--border-medium);
+      border-radius: 8px;
+      padding: 10px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .add-subtask-btn:hover {
+      border-color: var(--accent-warm-muted);
+      color: var(--text-secondary);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .modal-cancel-btn {
+      flex: 1;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-medium);
+      border-radius: 10px;
+      padding: 14px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .modal-cancel-btn:hover {
+      background: var(--bg-elevated);
+    }
+
+    .modal-submit-btn {
+      flex: 1;
+      background: var(--accent-warm);
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0a0a0a;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .modal-submit-btn:hover {
+      background: #f59e0b;
+    }
+
+    .modal-submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Existing tasks section in modal */
+    .existing-tasks-section {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .existing-tasks-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    .new-tasks-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent-warm);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      margin-top: 16px;
+    }
+
+    /* Tooltip */
+    .tooltip {
+      position: fixed;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-medium);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: var(--text-primary);
+      pointer-events: none;
+      z-index: 1001;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .tooltip.visible {
+      opacity: 1;
+    }
+
+    .tooltip-date {
+      font-weight: 600;
+    }
+
+    .tooltip-count {
+      color: var(--text-muted);
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="greeting" id="greeting">Good Morning</div>
+      <div class="greeting-name-edit" id="name-edit-container" style="display: none;">
+        <input type="text" id="name-input" placeholder="Enter your name" maxlength="20">
+        <button id="save-name-btn">Save</button>
+      </div>
+      <div class="greeting-subtitle">
+        <span id="subtitle-text">Click to set your name</span>
+        <button id="edit-name-btn" class="edit-name-btn" title="Change name">✎</button>
+      </div>
+    </header>
+
+    <!-- Heat Map -->
+    <section class="heatmap-section">
+      <div class="heatmap-header">
+        <div class="heatmap-title">Activity</div>
+        <div class="heatmap-stats"><span id="total-completed">0</span> tasks completed this year</div>
+      </div>
+      <div class="heatmap-container" id="heatmap"></div>
+      <div class="heatmap-legend">
+        <span class="heatmap-legend-label">Less</span>
+        <div class="heatmap-legend-box" style="background: var(--bg-tertiary)"></div>
+        <div class="heatmap-legend-box" style="background: rgba(217, 119, 6, 0.25)"></div>
+        <div class="heatmap-legend-box" style="background: rgba(217, 119, 6, 0.45)"></div>
+        <div class="heatmap-legend-box" style="background: rgba(217, 119, 6, 0.65)"></div>
+        <div class="heatmap-legend-box" style="background: var(--accent-warm)"></div>
+        <span class="heatmap-legend-label">More</span>
+      </div>
+    </section>
+
+    <!-- Main Grid -->
+    <div class="main-grid">
+      <!-- Quick Wins -->
+      <section class="section-card">
+        <div class="section-header">
+          <div class="section-title-group">
+            <div class="section-title">QUICKWINS</div>
+            <div class="section-badge" id="quickwins-count">0</div>
+          </div>
+          <div class="progress-container">
+            <div class="progress-ring">
+              <svg width="44" height="44">
+                <circle class="progress-ring-bg" cx="22" cy="22" r="18"></circle>
+                <circle class="progress-ring-fill" cx="22" cy="22" r="18" 
+                        stroke-dasharray="113.097" stroke-dashoffset="113.097" id="progress-ring"></circle>
+              </svg>
+              <span class="progress-text" id="progress-percent">0%</span>
+            </div>
+          </div>
+        </div>
+        <form class="add-task-form" id="quickwins-form">
+          <input type="text" placeholder="Add a quick task..." id="quickwins-input" required>
+          <input type="date" id="quickwins-deadline" required>
+          <button type="submit" class="add-task-btn">Add</button>
+        </form>
+        <div class="task-list" id="quickwins-list">
+          <div class="empty-state">
+            <div class="empty-state-icon">⚡</div>
+            <div class="empty-state-text">No quick tasks yet</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Parking Lot -->
+      <section class="section-card">
+        <div class="section-header">
+          <div class="section-title-group">
+            <div class="section-title">PARKING LOT</div>
+            <div class="section-badge" id="parking-count">0</div>
+          </div>
+        </div>
+        <div class="add-task-form">
+          <input type="text" placeholder="Add a long-term goal..." id="parking-input">
+          <button type="button" class="add-task-btn" id="parking-add-btn">Add</button>
+        </div>
+        <div class="task-list" id="parking-list">
+          <div class="empty-state">
+            <div class="empty-state-icon">📦</div>
+            <div class="empty-state-text">No long-term goals yet</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Modal for Parking Lot Task -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-title" id="modal-title">Add Long-term Goal</div>
+      <div class="modal-subtitle" id="modal-subtitle">Break it down into actionable quick wins</div>
+      <form class="modal-form" id="parking-form">
+        <div class="modal-input-group">
+          <label>Goal Name</label>
+          <input type="text" id="modal-goal-name" placeholder="e.g., Learn Spanish" required>
+        </div>
+        <div class="modal-input-group">
+          <label>Quick Win Tasks</label>
+          <div id="existing-tasks-container"></div>
+          <div class="subtask-list" id="subtask-list">
+            <div class="subtask-item">
+              <input type="text" placeholder="Task name" class="subtask-name" required>
+              <input type="date" class="subtask-deadline" required>
+              <button type="button" class="remove-subtask-btn" style="visibility: hidden;">×</button>
+            </div>
+          </div>
+          <button type="button" class="add-subtask-btn" id="add-subtask-btn">+ Add another task</button>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="modal-cancel-btn" id="modal-cancel">Cancel</button>
+          <button type="submit" class="modal-submit-btn" id="modal-submit">Create Goal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tooltip -->
+  <div class="tooltip" id="tooltip">
+    <span class="tooltip-date"></span>
+    <span class="tooltip-count"></span>
+  </div>
+
+  <script>
+    // Data structure
+    let data = {
+      quickwins: [],
+      parking: [],
+      completedDates: {} // { "2024-01-15": 3, ... }
+    };
+
+    // Current editing state
+    let editingParkingId = null;
+
+    // Load from localStorage
+    function loadData() {
+      const saved = localStorage.getItem('taskManagerData');
+      if (saved) {
+        data = JSON.parse(saved);
+      }
+    }
+
+    // Save to localStorage
+    function saveData() {
+      localStorage.setItem('taskManagerData', JSON.stringify(data));
+    }
+
+    // Generate unique ID
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    // Get stored username
+    function getUsername() {
+      return localStorage.getItem('taskManagerUsername') || '';
+    }
+
+    // Save username
+    function saveUsername(name) {
+      localStorage.setItem('taskManagerUsername', name);
+    }
+
+    // Update greeting based on time
+    function updateGreeting() {
+      const hour = new Date().getHours();
+      let greeting = 'Good Evening';
+      
+      if (hour >= 5 && hour < 12) {
+        greeting = 'Good Morning';
+      } else if (hour >= 12 && hour < 17) {
+        greeting = 'Good Afternoon';
+      }
+      
+      const username = getUsername();
+      if (username) {
+        document.getElementById('greeting').textContent = `${greeting}, ${username}`;
+        document.getElementById('subtitle-text').textContent = '— Focus on what matters';
+      } else {
+        document.getElementById('greeting').textContent = greeting;
+        document.getElementById('subtitle-text').textContent = 'Click to set your name';
+      }
+    }
+
+    // Name editing functionality
+    function setupNameEditing() {
+      const editBtn = document.getElementById('edit-name-btn');
+      const nameEditContainer = document.getElementById('name-edit-container');
+      const nameInput = document.getElementById('name-input');
+      const saveNameBtn = document.getElementById('save-name-btn');
+      const subtitleText = document.getElementById('subtitle-text');
+
+      function showNameInput() {
+        nameEditContainer.style.display = 'flex';
+        nameInput.value = getUsername();
+        nameInput.focus();
+      }
+
+      function hideNameInput() {
+        nameEditContainer.style.display = 'none';
+      }
+
+      function saveName() {
+        const name = nameInput.value.trim();
+        saveUsername(name);
+        updateGreeting();
+        hideNameInput();
+      }
+
+      editBtn.addEventListener('click', showNameInput);
+      subtitleText.addEventListener('click', () => {
+        if (!getUsername()) showNameInput();
+      });
+      
+      saveNameBtn.addEventListener('click', saveName);
+      
+      nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') saveName();
+        if (e.key === 'Escape') hideNameInput();
+      });
+    }
+
+    // Format date for display
+    function formatDate(dateStr) {
+      const date = new Date(dateStr + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      if (date.getTime() === today.getTime()) return 'Today';
+      if (date.getTime() === tomorrow.getTime()) return 'Tomorrow';
+      
+      const options = { month: 'short', day: 'numeric' };
+      return date.toLocaleDateString('en-US', options);
+    }
+
+    // Check if date is overdue
+    function isOverdue(dateStr) {
+      const date = new Date(dateStr + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return date < today;
+    }
+
+    // Check if date is today
+    function isToday(dateStr) {
+      const date = new Date(dateStr + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return date.getTime() === today.getTime();
+    }
+
+    // Get date string in local timezone (YYYY-MM-DD)
+    function getDateStr(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // Get today's date string in local timezone
+    function getTodayStr() {
+      return getDateStr(new Date());
+    }
+
+    // Calculate percentile value from sorted array
+    function getPercentile(sortedArr, percentile) {
+      if (sortedArr.length === 0) return 0;
+      const index = Math.ceil((percentile / 100) * sortedArr.length) - 1;
+      return sortedArr[Math.max(0, index)];
+    }
+
+    // Render Heat Map
+    function renderHeatMap() {
+      const container = document.getElementById('heatmap');
+      container.innerHTML = '';
+
+      const today = new Date();
+      const startDate = new Date(today);
+      startDate.setDate(startDate.getDate() - 364); // Go back ~52 weeks
+      
+      // Adjust to start from Sunday
+      const dayOfWeek = startDate.getDay();
+      startDate.setDate(startDate.getDate() - dayOfWeek);
+
+      // First pass: collect all non-zero counts for percentile calculation
+      let currentDate = new Date(startDate);
+      const nonZeroCounts = [];
+      const dateData = [];
+      let totalCompleted = 0;
+      const thisYear = today.getFullYear();
+
+      while (currentDate <= today) {
+        const dateStr = getDateStr(currentDate);
+        const count = data.completedDates[dateStr] || 0;
+        
+        dateData.push({ dateStr, count, dayOfWeek: currentDate.getDay() });
+        
+        if (count > 0) {
+          nonZeroCounts.push(count);
+        }
+        
+        if (currentDate.getFullYear() === thisYear) {
+          totalCompleted += count;
+        }
+
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      // Calculate dynamic percentile thresholds from non-zero days
+      const sortedCounts = nonZeroCounts.sort((a, b) => a - b);
+      const p25 = getPercentile(sortedCounts, 25);
+      const p50 = getPercentile(sortedCounts, 50);
+      const p75 = getPercentile(sortedCounts, 75);
+
+      // Function to determine level based on percentiles
+      function getLevel(count) {
+        if (count === 0) return 0;
+        if (count <= p25) return 1;
+        if (count <= p50) return 2;
+        if (count <= p75) return 3;
+        return 4;
+      }
+
+      // Second pass: render the heatmap with dynamic levels
+      let weekDiv = null;
+      dateData.forEach(({ dateStr, count, dayOfWeek }) => {
+        if (dayOfWeek === 0) {
+          weekDiv = document.createElement('div');
+          weekDiv.className = 'heatmap-week';
+          container.appendChild(weekDiv);
+        }
+
+        const level = getLevel(count);
+
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'heatmap-day';
+        dayDiv.setAttribute('data-level', level);
+        dayDiv.setAttribute('data-date', dateStr);
+        dayDiv.setAttribute('data-count', count);
+
+        dayDiv.addEventListener('mouseenter', showTooltip);
+        dayDiv.addEventListener('mouseleave', hideTooltip);
+
+        if (weekDiv) weekDiv.appendChild(dayDiv);
+      });
+
+      document.getElementById('total-completed').textContent = totalCompleted;
+    }
+
+    // Tooltip functions
+    function showTooltip(e) {
+      const tooltip = document.getElementById('tooltip');
+      const date = e.target.getAttribute('data-date');
+      const count = e.target.getAttribute('data-count');
+      
+      const dateObj = new Date(date + 'T00:00:00');
+      const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+      const formattedDate = dateObj.toLocaleDateString('en-US', options);
+      
+      tooltip.querySelector('.tooltip-date').textContent = formattedDate;
+      tooltip.querySelector('.tooltip-count').textContent = `${count} task${count !== '1' ? 's' : ''}`;
+      
+      const rect = e.target.getBoundingClientRect();
+      tooltip.style.left = rect.left + rect.width / 2 + 'px';
+      tooltip.style.top = rect.top - 40 + 'px';
+      tooltip.style.transform = 'translateX(-50%)';
+      tooltip.classList.add('visible');
+    }
+
+    function hideTooltip() {
+      document.getElementById('tooltip').classList.remove('visible');
+    }
+
+    // Render Quick Wins
+    function renderQuickWins() {
+      const list = document.getElementById('quickwins-list');
+      const countBadge = document.getElementById('quickwins-count');
+      
+      // Sort by deadline
+      const sorted = [...data.quickwins].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+      
+      countBadge.textContent = sorted.length;
+
+      if (sorted.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">⚡</div>
+            <div class="empty-state-text">No quick tasks yet</div>
+          </div>
+        `;
+        updateProgress();
+        return;
+      }
+
+      list.innerHTML = sorted.map(task => {
+        const deadlineClass = isOverdue(task.deadline) ? 'overdue' : isToday(task.deadline) ? 'today' : '';
+        const parentInfo = task.parentId ? `<div class="task-parent">From: ${getParentName(task.parentId)}</div>` : '';
+        
+        return `
+          <div class="task-item" data-id="${task.id}">
+            <label class="task-checkbox">
+              <input type="checkbox" onchange="completeQuickWin('${task.id}')">
+              <span class="task-checkbox-custom"></span>
+            </label>
+            <div class="task-content">
+              <div class="task-name">${escapeHtml(task.name)}</div>
+              <div class="task-deadline ${deadlineClass}">${formatDate(task.deadline)}</div>
+              ${parentInfo}
+            </div>
+            <button class="task-delete" onclick="deleteQuickWin('${task.id}')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      updateProgress();
+    }
+
+    // Get parent task name
+    function getParentName(parentId) {
+      const parent = data.parking.find(p => p.id === parentId);
+      return parent ? parent.name : 'Unknown';
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Update progress ring
+    function updateProgress() {
+      const total = data.quickwins.length;
+      const ring = document.getElementById('progress-ring');
+      const text = document.getElementById('progress-percent');
+      
+      // Let's make it show % of today's completed vs. today's total started
+      const todayStr = getTodayStr();
+      const todayCompleted = data.completedDates[todayStr] || 0;
+      const todayTotal = total + todayCompleted;
+      
+      const percent = todayTotal > 0 ? Math.round((todayCompleted / todayTotal) * 100) : 0;
+      const circumference = 2 * Math.PI * 18; // r = 18
+      const offset = circumference - (percent / 100) * circumference;
+      
+      ring.style.strokeDashoffset = offset;
+      text.textContent = percent + '%';
+    }
+
+    // Complete quick win
+    function completeQuickWin(id) {
+      const taskEl = document.querySelector(`.task-item[data-id="${id}"]`);
+      const task = data.quickwins.find(t => t.id === id);
+      
+      if (taskEl) {
+        taskEl.classList.add('completing');
+        setTimeout(() => {
+          // Record completion
+          const todayStr = getTodayStr();
+          data.completedDates[todayStr] = (data.completedDates[todayStr] || 0) + 1;
+          
+          // Remove from quickwins
+          data.quickwins = data.quickwins.filter(t => t.id !== id);
+          
+          // Update parent task progress if applicable
+          if (task && task.parentId) {
+            const parent = data.parking.find(p => p.id === task.parentId);
+            if (parent) {
+              parent.completedSubtasks = (parent.completedSubtasks || 0) + 1;
+              
+              // Check if all subtasks are done
+              if (parent.completedSubtasks >= parent.totalSubtasks) {
+                // Auto-complete the parking lot item
+                data.parking = data.parking.filter(p => p.id !== task.parentId);
+              }
+            }
+          }
+          
+          saveData();
+          renderQuickWins();
+          renderParkingLot();
+          renderHeatMap();
+        }, 300);
+      }
+    }
+
+    // Delete quick win
+    function deleteQuickWin(id) {
+      const task = data.quickwins.find(t => t.id === id);
+      data.quickwins = data.quickwins.filter(t => t.id !== id);
+      
+      // Update parent if applicable
+      if (task && task.parentId) {
+        const parent = data.parking.find(p => p.id === task.parentId);
+        if (parent) {
+          parent.totalSubtasks = Math.max(0, (parent.totalSubtasks || 1) - 1);
+          
+          // If no more subtasks, remove the parent too
+          if (parent.totalSubtasks === 0) {
+            data.parking = data.parking.filter(p => p.id !== task.parentId);
+          }
+        }
+      }
+      
+      saveData();
+      renderQuickWins();
+      renderParkingLot();
+    }
+
+    // Render Parking Lot
+    function renderParkingLot() {
+      const list = document.getElementById('parking-list');
+      const countBadge = document.getElementById('parking-count');
+      
+      countBadge.textContent = data.parking.length;
+
+      if (data.parking.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📦</div>
+            <div class="empty-state-text">No long-term goals yet</div>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = data.parking.map(task => {
+        const completed = task.completedSubtasks || 0;
+        const total = task.totalSubtasks || 0;
+        const remaining = data.quickwins.filter(q => q.parentId === task.id).length;
+        
+        return `
+          <div class="task-item parking-task" data-id="${task.id}" onclick="openEditModal('${task.id}')">
+            <div class="parking-task-header">
+              <label class="task-checkbox" onclick="event.stopPropagation()">
+                <input type="checkbox" onchange="completeParkingTask('${task.id}')">
+                <span class="task-checkbox-custom"></span>
+              </label>
+              <div class="task-content">
+                <div class="task-name">${escapeHtml(task.name)}</div>
+              </div>
+              <button class="task-delete" onclick="event.stopPropagation(); deleteParkingTask('${task.id}')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div class="parking-task-progress">
+              <span>${completed}</span> of <span>${total}</span> tasks completed · ${remaining} remaining
+              <span class="parking-task-edit-hint">· Click to edit</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Open edit modal for existing parking task
+    function openEditModal(parkingId) {
+      editingParkingId = parkingId;
+      const task = data.parking.find(p => p.id === parkingId);
+      if (!task) return;
+
+      const existingQuickwins = data.quickwins.filter(q => q.parentId === parkingId);
+      
+      // Update modal title and subtitle
+      document.getElementById('modal-title').textContent = 'Edit Goal';
+      document.getElementById('modal-subtitle').textContent = 'Manage tasks for this goal';
+      document.getElementById('modal-submit').textContent = 'Save Changes';
+      
+      // Set goal name (disabled for editing)
+      const goalNameInput = document.getElementById('modal-goal-name');
+      goalNameInput.value = task.name;
+      goalNameInput.disabled = true;
+      
+      // Show existing tasks
+      const existingContainer = document.getElementById('existing-tasks-container');
+      if (existingQuickwins.length > 0) {
+        existingContainer.innerHTML = `
+          <div class="existing-tasks-label">Existing Tasks (${existingQuickwins.length})</div>
+          <div class="subtask-list" style="margin-bottom: 8px;">
+            ${existingQuickwins.map(q => `
+              <div class="subtask-item existing" data-existing-id="${q.id}">
+                <input type="text" value="${escapeHtml(q.name)}" class="subtask-name" disabled>
+                <input type="date" value="${q.deadline}" class="subtask-deadline" disabled>
+                <button type="button" class="remove-subtask-btn" onclick="removeExistingSubtask('${q.id}')">×</button>
+              </div>
+            `).join('')}
+          </div>
+          <div class="new-tasks-label">Add New Tasks</div>
+        `;
+      } else {
+        existingContainer.innerHTML = '<div class="new-tasks-label">Add New Tasks</div>';
+      }
+      
+      // Reset new subtasks area
+      resetSubtasks();
+      
+      modalOverlay.classList.add('active');
+      subtaskList.querySelector('.subtask-name').focus();
+    }
+
+    // Remove existing subtask
+    function removeExistingSubtask(quickwinId) {
+      deleteQuickWin(quickwinId);
+      
+      // Refresh the modal if still open
+      if (editingParkingId) {
+        const task = data.parking.find(p => p.id === editingParkingId);
+        if (task) {
+          openEditModal(editingParkingId);
+        } else {
+          // Task was deleted (no more subtasks)
+          modalOverlay.classList.remove('active');
+          editingParkingId = null;
+        }
+      }
+    }
+
+    // Complete parking task (manual override)
+    function completeParkingTask(id) {
+      const taskEl = document.querySelector(`.parking-task[data-id="${id}"]`);
+      
+      if (taskEl) {
+        taskEl.classList.add('completing');
+        setTimeout(() => {
+          // Record completion
+          const todayStr = getTodayStr();
+          data.completedDates[todayStr] = (data.completedDates[todayStr] || 0) + 1;
+          
+          // Remove all associated quickwins
+          data.quickwins = data.quickwins.filter(t => t.parentId !== id);
+          
+          // Remove parking task
+          data.parking = data.parking.filter(t => t.id !== id);
+          
+          saveData();
+          renderQuickWins();
+          renderParkingLot();
+          renderHeatMap();
+        }, 300);
+      }
+    }
+
+    // Delete parking task
+    function deleteParkingTask(id) {
+      // Remove all associated quickwins
+      data.quickwins = data.quickwins.filter(t => t.parentId !== id);
+      
+      // Remove parking task
+      data.parking = data.parking.filter(t => t.id !== id);
+      
+      saveData();
+      renderQuickWins();
+      renderParkingLot();
+    }
+
+    // Modal handling
+    const modalOverlay = document.getElementById('modal-overlay');
+    const parkingInput = document.getElementById('parking-input');
+    const parkingAddBtn = document.getElementById('parking-add-btn');
+    const modalGoalName = document.getElementById('modal-goal-name');
+    const subtaskList = document.getElementById('subtask-list');
+    const addSubtaskBtn = document.getElementById('add-subtask-btn');
+    const modalCancel = document.getElementById('modal-cancel');
+    const parkingForm = document.getElementById('parking-form');
+
+    parkingAddBtn.addEventListener('click', () => {
+      // Reset editing state
+      editingParkingId = null;
+      
+      // Reset modal to create mode
+      document.getElementById('modal-title').textContent = 'Add Long-term Goal';
+      document.getElementById('modal-subtitle').textContent = 'Break it down into actionable quick wins';
+      document.getElementById('modal-submit').textContent = 'Create Goal';
+      document.getElementById('existing-tasks-container').innerHTML = '';
+      
+      const goalNameInput = document.getElementById('modal-goal-name');
+      goalNameInput.disabled = false;
+      
+      const goalName = parkingInput.value.trim();
+      if (goalName) {
+        goalNameInput.value = goalName;
+        parkingInput.value = '';
+      } else {
+        goalNameInput.value = '';
+      }
+      resetSubtasks();
+      modalOverlay.classList.add('active');
+      if (!goalName) {
+        goalNameInput.focus();
+      } else {
+        subtaskList.querySelector('.subtask-name').focus();
+      }
+    });
+
+    modalCancel.addEventListener('click', () => {
+      modalOverlay.classList.remove('active');
+      editingParkingId = null;
+    });
+
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        modalOverlay.classList.remove('active');
+        editingParkingId = null;
+      }
+    });
+
+    function resetSubtasks() {
+      subtaskList.innerHTML = `
+        <div class="subtask-item">
+          <input type="text" placeholder="Task name" class="subtask-name" required>
+          <input type="date" class="subtask-deadline" required>
+          <button type="button" class="remove-subtask-btn" style="visibility: hidden;">×</button>
+        </div>
+      `;
+    }
+
+    addSubtaskBtn.addEventListener('click', () => {
+      const subtaskItem = document.createElement('div');
+      subtaskItem.className = 'subtask-item';
+      subtaskItem.innerHTML = `
+        <input type="text" placeholder="Task name" class="subtask-name" required>
+        <input type="date" class="subtask-deadline" required>
+        <button type="button" class="remove-subtask-btn">×</button>
+      `;
+      subtaskList.appendChild(subtaskItem);
+      
+      subtaskItem.querySelector('.remove-subtask-btn').addEventListener('click', () => {
+        subtaskItem.remove();
+        updateRemoveButtons();
+      });
+      
+      updateRemoveButtons();
+      subtaskItem.querySelector('.subtask-name').focus();
+    });
+
+    function updateRemoveButtons() {
+      const items = subtaskList.querySelectorAll('.subtask-item:not(.existing)');
+      items.forEach((item, index) => {
+        const btn = item.querySelector('.remove-subtask-btn');
+        // In edit mode, allow removing all new items
+        // In create mode, keep at least one
+        if (editingParkingId) {
+          btn.style.visibility = 'visible';
+        } else {
+          btn.style.visibility = items.length > 1 ? 'visible' : 'hidden';
+        }
+      });
+    }
+
+    parkingForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const goalName = modalGoalName.value.trim();
+      const subtaskItems = subtaskList.querySelectorAll('.subtask-item:not(.existing)');
+      
+      // Collect new subtasks
+      const newSubtasks = [];
+      subtaskItems.forEach(item => {
+        const name = item.querySelector('.subtask-name').value.trim();
+        const deadline = item.querySelector('.subtask-deadline').value;
+        
+        if (name && deadline) {
+          newSubtasks.push({ name, deadline });
+        }
+      });
+
+      if (editingParkingId) {
+        // Edit mode - just add new subtasks
+        const task = data.parking.find(p => p.id === editingParkingId);
+        if (task && newSubtasks.length > 0) {
+          newSubtasks.forEach(st => {
+            data.quickwins.push({
+              id: generateId(),
+              name: st.name,
+              deadline: st.deadline,
+              parentId: editingParkingId
+            });
+            task.totalSubtasks = (task.totalSubtasks || 0) + 1;
+          });
+          
+          saveData();
+          renderQuickWins();
+          renderParkingLot();
+        }
+        
+        modalOverlay.classList.remove('active');
+        editingParkingId = null;
+      } else {
+        // Create mode
+        if (!goalName) return;
+        
+        if (newSubtasks.length === 0) {
+          alert('Please add at least one task with a name and deadline.');
+          return;
+        }
+
+        const parentId = generateId();
+
+        // Add parking lot task
+        data.parking.push({
+          id: parentId,
+          name: goalName,
+          totalSubtasks: newSubtasks.length,
+          completedSubtasks: 0
+        });
+
+        // Add quickwins
+        newSubtasks.forEach(st => {
+          data.quickwins.push({
+            id: generateId(),
+            name: st.name,
+            deadline: st.deadline,
+            parentId
+          });
+        });
+
+        saveData();
+        renderQuickWins();
+        renderParkingLot();
+        modalOverlay.classList.remove('active');
+      }
+    });
+
+    // Quick wins form
+    const quickwinsForm = document.getElementById('quickwins-form');
+    const quickwinsInput = document.getElementById('quickwins-input');
+    const quickwinsDeadline = document.getElementById('quickwins-deadline');
+
+    // Set default date to today
+    quickwinsDeadline.value = getTodayStr();
+
+    quickwinsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const name = quickwinsInput.value.trim();
+      const deadline = quickwinsDeadline.value;
+      
+      if (!name || !deadline) return;
+
+      data.quickwins.push({
+        id: generateId(),
+        name,
+        deadline,
+        parentId: null
+      });
+
+      saveData();
+      renderQuickWins();
+      
+      quickwinsInput.value = '';
+      quickwinsDeadline.value = getTodayStr();
+      quickwinsInput.focus();
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+        modalOverlay.classList.remove('active');
+        editingParkingId = null;
+      }
+    });
+
+    // Initialize
+    loadData();
+    updateGreeting();
+    setupNameEditing();
+    renderHeatMap();
+    renderQuickWins();
+    renderParkingLot();
+    
+    // Update greeting every minute
+    setInterval(updateGreeting, 60000);
+  </script>
+</body>
+</html>
