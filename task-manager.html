@@ -498,6 +498,45 @@
       color: var(--accent-warm);
     }
 
+    .task-deadline.editable {
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .task-deadline.editable:hover {
+      color: var(--accent-warm);
+      text-decoration: underline;
+    }
+
+    .task-deadline-edit {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .task-deadline-edit input[type="date"] {
+      background: var(--bg-secondary);
+      border: 1px solid var(--accent-warm-muted);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-family: inherit;
+      font-size: 12px;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .task-deadline-edit input[type="date"]:focus {
+      outline: none;
+      border-color: var(--accent-warm);
+      box-shadow: 0 0 0 2px var(--accent-warm-subtle);
+    }
+
+    .task-deadline-edit input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.7);
+      cursor: pointer;
+    }
+
     .task-parent {
       font-size: 11px;
       color: var(--text-muted);
@@ -718,10 +757,6 @@
     .subtask-item input[type="date"]::-webkit-calendar-picker-indicator {
       filter: invert(0.7);
       cursor: pointer;
-    }
-
-    .subtask-item.existing {
-      opacity: 0.7;
     }
 
     .subtask-item.existing input {
@@ -1270,7 +1305,9 @@
             </label>
             <div class="task-content">
               <div class="task-name">${escapeHtml(task.name)}</div>
-              <div class="task-deadline ${deadlineClass}">${formatDate(task.deadline)}</div>
+              <div class="task-deadline ${deadlineClass} editable" onclick="editQuickWinDeadline('${task.id}', event)" data-task-id="${task.id}">
+                ${formatDate(task.deadline)}
+              </div>
               ${parentInfo}
             </div>
             <button class="task-delete" onclick="deleteQuickWin('${task.id}')">
@@ -1377,6 +1414,104 @@
       renderParkingLot();
     }
 
+    // Track current editing state for quickwins
+    let editingQuickWinId = null;
+    let editingClickHandler = null;
+
+    // Edit quick win deadline
+    function editQuickWinDeadline(id, event) {
+      // Prevent event bubbling
+      if (event) {
+        event.stopPropagation();
+      }
+
+      // If already editing this task, do nothing
+      if (editingQuickWinId === id) return;
+
+      // If editing another task, save it first
+      if (editingQuickWinId !== null) {
+        finishEditingQuickWin();
+      }
+
+      const task = data.quickwins.find(t => t.id === id);
+      if (!task) return;
+
+      const deadlineEl = document.querySelector(`.task-deadline[data-task-id="${id}"]`);
+      if (!deadlineEl) return;
+
+      // Set editing state
+      editingQuickWinId = id;
+
+      // Replace with date input
+      deadlineEl.innerHTML = `
+        <div class="task-deadline-edit">
+          <input type="date" value="${task.deadline}" id="edit-deadline-${id}">
+        </div>
+      `;
+      deadlineEl.classList.remove('editable', 'overdue', 'today');
+
+      const dateInput = document.getElementById(`edit-deadline-${id}`);
+      
+      // Focus and open the date picker
+      dateInput.focus();
+      
+      // Handle date change
+      dateInput.addEventListener('change', function onDateChange() {
+        dateInput.removeEventListener('change', onDateChange);
+        finishEditingQuickWin();
+      });
+
+      // Handle keyboard
+      dateInput.addEventListener('keydown', function onKeyDown(e) {
+        if (e.key === 'Escape') {
+          editingQuickWinId = null;
+          cleanupEditingHandler();
+          renderQuickWins();
+        } else if (e.key === 'Enter') {
+          finishEditingQuickWin();
+        }
+      });
+
+      // Handle blur (clicking outside the input)
+      dateInput.addEventListener('blur', function onBlur() {
+        // Small delay to allow change event to fire first
+        setTimeout(() => {
+          if (editingQuickWinId === id) {
+            finishEditingQuickWin();
+          }
+        }, 150);
+      });
+    }
+
+    // Cleanup editing click handler
+    function cleanupEditingHandler() {
+      if (editingClickHandler) {
+        document.removeEventListener('click', editingClickHandler);
+        editingClickHandler = null;
+      }
+    }
+
+    // Finish editing and save
+    function finishEditingQuickWin() {
+      if (editingQuickWinId === null) return;
+
+      const id = editingQuickWinId;
+      const task = data.quickwins.find(t => t.id === id);
+      const dateInput = document.getElementById(`edit-deadline-${id}`);
+
+      if (task && dateInput) {
+        const newDeadline = dateInput.value;
+        if (newDeadline && newDeadline !== task.deadline) {
+          task.deadline = newDeadline;
+          saveData();
+        }
+      }
+
+      editingQuickWinId = null;
+      cleanupEditingHandler();
+      renderQuickWins();
+    }
+
     // Render Parking Lot
     function renderParkingLot() {
       const list = document.getElementById('parking-list');
@@ -1437,21 +1572,21 @@
       document.getElementById('modal-subtitle').textContent = 'Manage tasks for this goal';
       document.getElementById('modal-submit').textContent = 'Save Changes';
       
-      // Set goal name (disabled for editing)
+      // Set goal name (editable)
       const goalNameInput = document.getElementById('modal-goal-name');
       goalNameInput.value = task.name;
-      goalNameInput.disabled = true;
+      goalNameInput.disabled = false;
       
       // Show existing tasks
       const existingContainer = document.getElementById('existing-tasks-container');
       if (existingQuickwins.length > 0) {
         existingContainer.innerHTML = `
           <div class="existing-tasks-label">Existing Tasks (${existingQuickwins.length})</div>
-          <div class="subtask-list" style="margin-bottom: 8px;">
+          <div class="subtask-list" id="existing-subtask-list" style="margin-bottom: 8px;">
             ${existingQuickwins.map(q => `
               <div class="subtask-item existing" data-existing-id="${q.id}">
-                <input type="text" value="${escapeHtml(q.name)}" class="subtask-name" disabled>
-                <input type="date" value="${q.deadline}" class="subtask-deadline" disabled>
+                <input type="text" value="${escapeHtml(q.name)}" class="subtask-name">
+                <input type="date" value="${q.deadline}" class="subtask-deadline">
                 <button type="button" class="remove-subtask-btn" onclick="removeExistingSubtask('${q.id}')">×</button>
               </div>
             `).join('')}
@@ -1636,8 +1771,30 @@
       });
 
       if (editingParkingId) {
-        // Edit mode - just add new subtasks
+        // Edit mode - update goal name, existing subtasks, and add new ones
         const task = data.parking.find(p => p.id === editingParkingId);
+        
+        // Update goal name
+        if (task && goalName) {
+          task.name = goalName;
+        }
+        
+        // Update existing subtasks
+        const existingSubtaskItems = document.querySelectorAll('#existing-subtask-list .subtask-item.existing');
+        existingSubtaskItems.forEach(item => {
+          const existingId = item.getAttribute('data-existing-id');
+          const name = item.querySelector('.subtask-name').value.trim();
+          const deadline = item.querySelector('.subtask-deadline').value;
+          
+          // Find and update the quickwin
+          const quickwin = data.quickwins.find(q => q.id === existingId);
+          if (quickwin && name && deadline) {
+            quickwin.name = name;
+            quickwin.deadline = deadline;
+          }
+        });
+        
+        // Add new subtasks
         if (task && newSubtasks.length > 0) {
           newSubtasks.forEach(st => {
             data.quickwins.push({
@@ -1648,11 +1805,11 @@
             });
             task.totalSubtasks = (task.totalSubtasks || 0) + 1;
           });
-          
-          saveData();
-          renderQuickWins();
-          renderParkingLot();
         }
+        
+        saveData();
+        renderQuickWins();
+        renderParkingLot();
         
         modalOverlay.classList.remove('active');
         editingParkingId = null;
